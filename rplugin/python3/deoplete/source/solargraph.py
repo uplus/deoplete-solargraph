@@ -1,0 +1,72 @@
+import platform
+import json
+import re
+import subprocess
+
+import solargraph_utils as solar
+from deoplete.util import getlines,expand
+from .base import Base
+
+is_window = platform.system() == "Windows"
+
+class Source(Base):
+    def __init__(self, vim):
+        Base.__init__(self, vim)
+        self.name = 'solargraph'
+        self.filetypes = ['ruby']
+        self.mark = '[solar]'
+        self.rank = 500
+        self.input_pattern = r'\.[a-zA-Z0-9_?!]*|[a-zA-Z]\w*::\w*'
+        self.is_server_started = False
+
+    def on_init(self, context):
+        vars = context['vars']
+        self.encoding = self.vim.eval('&encoding')
+
+        self.command = expand(vars.get('deoplete#sources#solargraph#command', 'solargraph'))
+        self.args = vars.get('deoplete#sources#solargraph#args', ['--port', '0'])
+
+    def start_server(self):
+        if self.is_server_started == True:
+            return True
+
+        if not self.command:
+            self.error('No solargraph binary set.')
+            return
+
+        if not self.vim.call('executable', self.command):
+            return False
+
+        try:
+            self.server = solar.Server()
+        except solar.ServerException as error:
+            self.error(str(error))
+            return False
+
+        self.client = solar.Client(self.server.url)
+        self.is_server_started = True
+        return True
+
+    def get_complete_position(self, context):
+        m = re.search('[a-zA-Z0-9_?!]*$', context['input'])
+        return m.start() if m else -1
+
+    def gather_candidates(self, context):
+        if not self.start_server():
+            return []
+
+        line = context['position'][1] - 1
+        column = context['complete_position']
+        text = '\n'.join(getlines(self.vim)).encode(self.encoding)
+
+        result = self.client.suggest(text=text, line=line, column=column)
+
+        if result['status'] != 'ok':
+            return []
+
+        output = result['suggestions']
+
+        return [{
+            'word': cand['insert'],
+            'menu': cand['label'],
+        } for cand in result['suggestions']]
