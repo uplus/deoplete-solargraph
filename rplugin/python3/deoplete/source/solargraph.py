@@ -68,5 +68,19 @@ class Source(Base):
 
         return [{
             'word': cand['insert'],
-            'menu': cand['label'],
+            'kind': cand['kind'],
+            'dup': 1,
+            'abbr': self.build_abbr(cand),   # in popup menu instead of 'word'
+            'info': cand['label'],  # in preview window
+            'menu': cand['detail'], # after 'word' or 'abbr'
         } for cand in result['suggestions']]
+
+    def build_abbr(self, cand):
+        abbr = cand['label']
+        kind = cand['kind']
+
+        if kind == 'Method':
+            args = ', '.join(cand['arguments'])
+            abbr += '({})'.format(args)
+
+        return abbr
