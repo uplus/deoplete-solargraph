@@ -36,6 +36,7 @@ class Source(Base):
     def on_init(self, context):
         vars = context['vars']
         self.encoding = self.vim.eval('&encoding')
+        self.workspace_cache = {}
 
         self.command = expand(vars.get('deoplete#sources#solargraph#command', 'solargraph'))
         self.args = vars.get('deoplete#sources#solargraph#args', ['--port', '0'])
@@ -113,4 +114,8 @@ class Source(Base):
         if len(file_dir) == '':
             return None
 
-        return find_dir_recursive(file_dir, ['Gemfile', '.git']) or file_dir
+        if file_dir in self.workspace_cache:
+            return self.workspace_cache[file_dir]
+
+        self.workspace_cache[file_dir] = find_dir_recursive(file_dir, ['Gemfile', '.git']) or file_dir
+        return self.workspace_cache[file_dir]
