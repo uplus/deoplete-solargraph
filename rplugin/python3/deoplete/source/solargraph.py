@@ -2,12 +2,26 @@ import platform
 import json
 import re
 import subprocess
+import os
 
 import solargraph_utils as solar
 from deoplete.util import getlines,expand
 from .base import Base
 
 is_window = platform.system() == "Windows"
+
+def find_dir_recursive(base_dir, targets):
+    while True:
+        parent = os.path.dirname(base_dir[:-1])
+
+        if parent == '':
+            return None
+
+        for path in targets:
+            if os.path.exists(os.path.join(base_dir, path)):
+                return base_dir
+
+        base_dir = parent
 
 class Source(Base):
     def __init__(self, vim):
@@ -59,8 +73,9 @@ class Source(Base):
         column = context['complete_position']
         text = '\n'.join(getlines(self.vim)).encode(self.encoding)
         filename = self.get_absolute_filepath()
+        workspace = self.find_workspace_directory()
 
-        result = self.client.suggest(text=text, line=line, column=column, filename=filename)
+        result = self.client.suggest(text=text, line=line, column=column, filename=filename, workspace=workspace)
 
         if result['status'] != 'ok':
             return []
@@ -91,3 +106,11 @@ class Source(Base):
         if len(path) == 0:
             return None
         return path
+
+    def find_workspace_directory(self):
+        # if % is empty, %:p:h == $PWD
+        file_dir = os.path.dirname(self.vim.call('expand', '%:p'))
+        if len(file_dir) == '':
+            return None
+
+        return find_dir_recursive(file_dir, ['Gemfile', '.git']) or file_dir
