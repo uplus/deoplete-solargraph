@@ -2,6 +2,8 @@
 
 [deoplete.nvim](https://github.com/Shougo/deoplete.nvim) source for Ruby with [solargraph](https://github.com/castwide/solargraph).  
 
+[![asciicast](https://asciinema.org/a/GWeqELfs2dyftEe5BHnAUjIhm.png)](https://asciinema.org/a/GWeqELfs2dyftEe5BHnAUjIhm)  
+
 ## Require
 
 * [neovim](https://github.com/neovim/neovim)

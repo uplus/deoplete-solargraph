@@ -31,7 +31,7 @@ class Source(Base):
             return True
 
         if not self.command:
-            self.error('No solargraph binary set.')
+            self.print_error('No solargraph binary set.')
             return
 
         if not self.vim.call('executable', self.command):
@@ -40,7 +40,7 @@ class Source(Base):
         try:
             self.server = solar.Server()
         except solar.ServerException as error:
-            self.error(str(error))
+            self.print_error(str(error))
             return False
 
         self.client = solar.Client(self.server.url)
@@ -58,8 +58,9 @@ class Source(Base):
         line = context['position'][1] - 1
         column = context['complete_position']
         text = '\n'.join(getlines(self.vim)).encode(self.encoding)
+        filename = self.get_absolute_filepath()
 
-        result = self.client.suggest(text=text, line=line, column=column)
+        result = self.client.suggest(text=text, line=line, column=column, filename=filename)
 
         if result['status'] != 'ok':
             return []
@@ -84,3 +85,9 @@ class Source(Base):
             abbr += '({})'.format(args)
 
         return abbr
+
+    def get_absolute_filepath(self):
+        path = self.vim.call('expand', '%:p')
+        if len(path) == 0:
+            return None
+        return path
