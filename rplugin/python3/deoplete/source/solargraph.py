@@ -31,7 +31,7 @@ class Source(Base):
             return True
 
         if not self.command:
-            self.error('No solargraph binary set.')
+            self.print_error('No solargraph binary set.')
             return
 
         if not self.vim.call('executable', self.command):
@@ -40,7 +40,7 @@ class Source(Base):
         try:
             self.server = solar.Server()
         except solar.ServerException as error:
-            self.error(str(error))
+            self.print_error(str(error))
             return False
 
         self.client = solar.Client(self.server.url)
