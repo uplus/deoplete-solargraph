@@ -73,8 +73,8 @@ class Source(Base):
         line = context['position'][1] - 1
         column = context['complete_position']
         text = '\n'.join(getlines(self.vim)).encode(self.encoding)
-        filename = self.get_absolute_filepath()
-        workspace = self.find_workspace_directory()
+        filename = context['bufpath']
+        workspace = self.find_workspace_directory(context['bufpath'])
 
         result = self.client.suggest(text=text, line=line, column=column, filename=filename, workspace=workspace)
 
@@ -108,9 +108,8 @@ class Source(Base):
             return None
         return path
 
-    def find_workspace_directory(self):
-        # if % is empty, %:p:h == $PWD
-        file_dir = os.path.dirname(self.vim.call('expand', '%:p'))
+    def find_workspace_directory(self, filepath):
+        file_dir = os.path.dirname(filepath)
         if len(file_dir) == '':
             return None
 
