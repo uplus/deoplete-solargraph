@@ -2,6 +2,7 @@ import platform
 import json
 import re
 import subprocess
+import os
 
 import solargraph_utils as solar
 from deoplete.util import getlines,expand
@@ -9,19 +10,33 @@ from .base import Base
 
 is_window = platform.system() == "Windows"
 
+def find_dir_recursive(base_dir, targets):
+    while True:
+        parent = os.path.dirname(base_dir[:-1])
+
+        if parent == '':
+            return None
+
+        for path in targets:
+            if os.path.exists(os.path.join(base_dir, path)):
+                return base_dir
+
+        base_dir = parent
+
 class Source(Base):
     def __init__(self, vim):
         Base.__init__(self, vim)
         self.name = 'solargraph'
         self.filetypes = ['ruby']
         self.mark = '[solar]'
-        self.rank = 500
+        self.rank = 900
         self.input_pattern = r'\.[a-zA-Z0-9_?!]*|[a-zA-Z]\w*::\w*'
         self.is_server_started = False
 
     def on_init(self, context):
         vars = context['vars']
         self.encoding = self.vim.eval('&encoding')
+        self.workspace_cache = {}
 
         self.command = expand(vars.get('deoplete#sources#solargraph#command', 'solargraph'))
         self.args = vars.get('deoplete#sources#solargraph#args', ['--port', '0'])
@@ -58,9 +73,10 @@ class Source(Base):
         line = context['position'][1] - 1
         column = context['complete_position']
         text = '\n'.join(getlines(self.vim)).encode(self.encoding)
-        filename = self.get_absolute_filepath()
+        filename = context['bufpath']
+        workspace = self.find_workspace_directory(context['bufpath'])
 
-        result = self.client.suggest(text=text, line=line, column=column, filename=filename)
+        result = self.client.suggest(text=text, line=line, column=column, filename=filename, workspace=workspace)
 
         if result['status'] != 'ok':
             return []
@@ -91,3 +107,14 @@ class Source(Base):
         if len(path) == 0:
             return None
         return path
+
+    def find_workspace_directory(self, filepath):
+        file_dir = os.path.dirname(filepath)
+        if len(file_dir) == '':
+            return None
+
+        if file_dir in self.workspace_cache:
+            return self.workspace_cache[file_dir]
+
+        self.workspace_cache[file_dir] = find_dir_recursive(file_dir, ['Gemfile', '.git']) or file_dir
+        return self.workspace_cache[file_dir]
