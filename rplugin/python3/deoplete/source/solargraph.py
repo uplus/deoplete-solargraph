@@ -58,8 +58,9 @@ class Source(Base):
         line = context['position'][1] - 1
         column = context['complete_position']
         text = '\n'.join(getlines(self.vim)).encode(self.encoding)
+        filename = self.get_absolute_filepath()
 
-        result = self.client.suggest(text=text, line=line, column=column)
+        result = self.client.suggest(text=text, line=line, column=column, filename=filename)
 
         if result['status'] != 'ok':
             return []
@@ -84,3 +85,9 @@ class Source(Base):
             abbr += '({})'.format(args)
 
         return abbr
+
+    def get_absolute_filepath(self):
+        path = self.vim.call('expand', '%:p')
+        if len(path) == 0:
+            return None
+        return path
