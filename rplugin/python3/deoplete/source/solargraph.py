@@ -79,6 +79,7 @@ class Source(Base):
         result = self.client.suggest(text=text, line=line, column=column, filename=filename, workspace=workspace)
 
         if result['status'] != 'ok':
+            self.print_error(result)
             return []
 
         output = result['suggestions']
