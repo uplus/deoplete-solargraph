@@ -54,7 +54,7 @@ class Source(Base):
 
         try:
             self.server = solar.Server()
-        except solar.ServerException as error:
+        except solar.ServerError as error:
             self.print_error(str(error))
             return False
 
@@ -79,6 +79,7 @@ class Source(Base):
         result = self.client.suggest(text=text, line=line, column=column, filename=filename, workspace=workspace)
 
         if result['status'] != 'ok':
+            self.print_error(result)
             return []
 
         output = result['suggestions']
