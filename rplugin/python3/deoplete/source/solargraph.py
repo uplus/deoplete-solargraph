@@ -30,7 +30,7 @@ class Source(Base):
         self.filetypes = ['ruby']
         self.mark = '[solar]'
         self.rank = 900
-        self.input_pattern = r'\.[a-zA-Z0-9_?!]*|[a-zA-Z]\w*::\w*'
+        self.input_pattern = r'\.[a-zA-Z0-9_?!]+|[a-zA-Z]\w*::\w*'
         self.is_server_started = False
 
     def on_init(self, context):
