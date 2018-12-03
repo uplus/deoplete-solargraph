@@ -17,7 +17,7 @@
 Install  `solargraph` and `solargraph-utils.py`.  
 
 ```bash
-gem install solargraph
+gem install solargraph -v 0.18.0
 pip install solargraph-utils.py --user
 ```
 
