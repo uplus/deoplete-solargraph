@@ -5,8 +5,8 @@ import subprocess
 import os
 
 import solargraph_utils as solar
+from deoplete.base.source import Base
 from deoplete.util import getlines,expand
-from .base import Base
 
 is_window = platform.system() == "Windows"
 
